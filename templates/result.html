@@ -103,13 +103,23 @@
 		{% endif %}
 	</p>
 
-	<p><button type="button" id="select-all-btn" class="btn">Select all</button></p>
+	<p><button type="button" id="select-all-btn" class="btn">Copy all</button></p>
 	<textarea class="xml-output" id="xml-output" readonly onclick="this.select();">{{ result.xml }}</textarea>
 	<script nonce="{{ g.csp_nonce }}">
-	document.getElementById("select-all-btn").addEventListener("click", () => {
+	document.getElementById("select-all-btn").addEventListener("click", async () => {
 		const xmlOutput = document.getElementById("xml-output");
 		xmlOutput.focus();
 		xmlOutput.select();
+		let copied = false;
+		try {
+			await navigator.clipboard.writeText(xmlOutput.value);
+			copied = true;
+		} catch {
+			copied = document.execCommand("copy");
+		}
+		const button = document.getElementById("select-all-btn");
+		button.textContent = copied ? "Copied" : "Copy failed";
+		setTimeout(() => { button.textContent = "Copy all"; }, 1500);
 	});
 	</script>
 	{% endif %}

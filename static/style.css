@@ -353,6 +353,10 @@ button:disabled {
 	background: #eee;
 }
 
+.preview-box ul li + li {
+	padding-top: 6px;
+}
+
 /* ADMIN SETTINGS */
 .admin-users {
 	border-collapse: collapse;
