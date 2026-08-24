@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-container">
+	{% include "_breadcrumbs.html" %}
+	<h1>Which page?</h1>
+	<p class="subtitle">Extracting: {{ element_label }} -- {{ page_count }} page{{ "s" if page_count != 1 }} total</p>
+	<img src="{{ url_for('extract.thumbnail') }}" alt="First page of the PDF, as a sanity check" class="pdf-thumbnail">
+	{% if error %}<p class="error-text">{{ error }}</p>{% endif %}
+	<form method="post">
+		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+		<div class="field">
+			<label for="page_number">Page number</label>
+			<input type="number" id="page_number" name="page_number" min="1" max="{{ page_count }}" required autofocus>
+		</div>
+		<button type="submit">Show page</button>
+	</form>
+</div>
+{% endblock %}

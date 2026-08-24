@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-container">
+	<p>Select an image file, then draw a rectangle around the area to crop.</p>
+
+	<div class="upload-box" id="drop-zone">
+		<label for="image-loader">Image file</label>
+		<input type="file" id="image-loader" accept="image/png,image/jpeg">
+	</div>
+
+	<p class="error-text" id="file-error" style="display: none;"></p>
+	<p class="subtitle" id="status-tip">Select an image to begin.</p>
+
+	<p class="controls" id="top-controls" style="display: none;">
+		<button type="button" class="btn" data-action="crop">Crop selection</button>
+		<button type="button" class="btn-reset" data-action="reset">Clear selection</button>
+	</p>
+
+	<div class="canvas-wrap" id="canvas-wrap" style="display: none;">
+		<canvas id="crop-canvas"></canvas>
+	</div>
+
+	<p class="controls" id="bottom-controls" style="display: none;">
+		<button type="button" class="btn" data-action="crop">Crop selection</button>
+		<button type="button" class="btn-reset" data-action="reset">Clear selection</button>
+	</p>
+</div>
+
+<script>
+(function () {
+	const imageLoader = document.getElementById("image-loader");
+	const canvas = document.getElementById("crop-canvas");
+	const ctx = canvas.getContext("2d");
+	const canvasWrap = document.getElementById("canvas-wrap");
+	const controlPanels = [document.getElementById("top-controls"), document.getElementById("bottom-controls")];
+	const statusTip = document.getElementById("status-tip");
+	const fileError = document.getElementById("file-error");
+
+	const ACCEPTED_TYPES = ["image/png", "image/jpeg"];
+	const BAD_FILE_MESSAGE = "That file type isn't an image the tool can accept. Please choose another.";
+
+	const img = new Image();
+	let isDrawing = false;
+	let startX = 0, startY = 0, endX = 0, endY = 0;
+
+	imageLoader.addEventListener("change", handleImage);
+
+	function showFileError(message) {
+		fileError.textContent = message;
+		fileError.style.display = "block";
+		imageLoader.value = "";
+	}
+
+	function handleImage(e) {
+		const file = e.target.files[0];
+		if (!file) return;
+		fileError.style.display = "none";
+
+		// accept= on the input is just a picker filter -- doesn't stop
+		// "All files" or a drag-drop, so this check is the real gate
+		if (!ACCEPTED_TYPES.includes(file.type)) {
+			showFileError(BAD_FILE_MESSAGE);
+			return;
+		}
+
+		const reader = new FileReader();
+		reader.onload = (event) => {
+			img.onload = () => {
+				canvas.width = img.width;
+				canvas.height = img.height;
+				resetCanvas();
+				canvasWrap.style.display = "block";
+				controlPanels.forEach((panel) => panel.style.display = "flex");
+				statusTip.textContent = "Click and drag over the image to select an area.";
+			};
+			// belt-and-suspenders -- a file can claim image/png and still
+			// fail to decode (corrupt data, mislabeled content)
+			img.onerror = () => showFileError(BAD_FILE_MESSAGE);
+			img.src = event.target.result;
+		};
+		reader.readAsDataURL(file);
+	}
+
+	function drawImage() {
+		ctx.drawImage(img, 0, 0);
+	}
+
+	function resetCanvas() {
+		drawImage();
+		startX = startY = endX = endY = 0;
+	}
+
+	function coords(e) {
+		const rect = canvas.getBoundingClientRect();
+		return {
+			x: (e.clientX - rect.left) * (canvas.width / rect.width),
+			y: (e.clientY - rect.top) * (canvas.height / rect.height),
+		};
+	}
+
+	canvas.addEventListener("mousedown", (e) => {
+		const p = coords(e);
+		startX = p.x;
+		startY = p.y;
+		isDrawing = true;
+	});
+
+	canvas.addEventListener("mousemove", (e) => {
+		if (!isDrawing) return;
+		const p = coords(e);
+		endX = p.x;
+		endY = p.y;
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		drawImage();
+		ctx.fillStyle = "rgba(0, 86, 179, 0.25)";
+		ctx.strokeStyle = "#0056b3";
+		ctx.lineWidth = 3;
+		ctx.fillRect(startX, startY, endX - startX, endY - startY);
+		ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+	});
+
+	canvas.addEventListener("mouseup", () => { isDrawing = false; });
+
+	document.querySelectorAll('[data-action="reset"]').forEach((button) => {
+		button.addEventListener("click", () => {
+			resetCanvas();
+			statusTip.textContent = "Click and drag over the image to select an area.";
+		});
+	});
+
+	document.querySelectorAll('[data-action="crop"]').forEach((button) => {
+		button.addEventListener("click", () => {
+			const x = Math.min(startX, endX);
+			const y = Math.min(startY, endY);
+			const w = Math.abs(endX - startX);
+			const h = Math.abs(endY - startY);
+			if (w < 5 || h < 5) {
+				alert("Select an area of the image first.");
+				return;
+			}
+
+			const cropCanvas = document.createElement("canvas");
+			cropCanvas.width = w;
+			cropCanvas.height = h;
+			cropCanvas.getContext("2d").drawImage(img, x, y, w, h, 0, 0, w, h);
+			const dataUrl = cropCanvas.toDataURL("image/png");
+
+			const newWindow = window.open();
+			if (newWindow) {
+				newWindow.document.write(
+					"<title>Cropped image</title>" +
+					"<body style=\"margin:0;background:#333;display:flex;justify-content:center;align-items:center;height:100vh;\">" +
+					"<img src=\"" + dataUrl + "\" alt=\"Cropped image\" style=\"max-width:95%;max-height:95%;\">" +
+					"</body>"
+				);
+				newWindow.document.close();
+			} else {
+				alert("Pop-up blocked -- allow pop-ups to see the cropped image.");
+			}
+		});
+	});
+})();
+</script>
+{% endblock %}

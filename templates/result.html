@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-container">
+	{% include "_breadcrumbs.html" %}
+	<h1>{{ element_label }} extracted</h1>
+
+	<div class="actions">
+		<form method="post" action="{{ url_for('extract.extract_another') }}">
+			<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+			<button type="submit" class="btn">Extract another</button>
+		</form>
+		<form method="post" action="{{ url_for('extract.new_upload') }}">
+			<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+			<button type="submit" class="link-btn">Upload a different PDF</button>
+		</form>
+	</div>
+
+	{% if result.element_type != "image" and result.empty %}
+	<p class="error-text">Nothing could be converted from that selection.</p>
+	<p><a href="{{ url_for('extract.select_region') }}" class="btn">Retry</a></p>
+	{% else %}
+	<div class="preview-box">
+		{% if result.element_type == "paragraph" %}
+		<p>{{ result.preview }}</p>
+		{% elif result.element_type == "orderedlist" %}
+		<ol>{% for item in result.preview %}<li>{{ item }}</li>{% endfor %}</ol>
+		{% elif result.element_type == "itemizedlist" %}
+		<ul>{% for item in result.preview %}<li>{{ item }}</li>{% endfor %}</ul>
+		{% elif result.element_type == "table" %}
+		<table>
+			{% if result.preview.header %}
+			<thead>
+				<tr>{% for cell in result.preview.header %}<th>{{ cell }}</th>{% endfor %}</tr>
+			</thead>
+			{% endif %}
+			<tbody>
+				{% for row in result.preview.body %}
+				<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+		{% elif result.element_type == "image" %}
+		<p>Right-click the image and choose "Save As" to download it. Click it to open the full size in a new tab.</p>
+
+		<p>
+			<button type="button" class="btn watermark-btn">Watermark <span class="watermark-symbol">*</span></button>
+		</p>
+
+		<a class="image-link" id="extracted-image-link" href="{{ url_for('extract.extracted_image') }}" target="_blank">
+			<img class="extracted-image" id="extracted-image-el" src="{{ url_for('extract.extracted_image') }}" alt="Extracted image">
+		</a>
+
+		<p>
+			<button type="button" class="btn watermark-btn">Watermark <span class="watermark-symbol">*</span></button>
+		</p>
+		<script>
+		(function () {
+			const originalSrc = "{{ url_for('extract.extracted_image') }}";
+			const sourceImg = document.getElementById("extracted-image-el");
+			const sourceLink = document.getElementById("extracted-image-link");
+			const watermarkBtns = document.querySelectorAll(".watermark-btn"); // one above the image, one below
+
+			watermarkBtns.forEach((btn) => btn.addEventListener("click", () => {
+				// always draw from a fresh copy of the original, not the
+				// currently-displayed <img> -- otherwise a second click
+				// would watermark the watermark, stacking asterisks
+				const original = new Image();
+				original.onload = () => {
+					const w = original.naturalWidth;
+					const h = original.naturalHeight;
+					if (h < 400) {
+						alert("The image must be at least 400 pixels high for a watermark.");
+						return;
+					}
+
+					const canvas = document.createElement("canvas");
+					canvas.width = w;
+					canvas.height = h;
+					const ctx = canvas.getContext("2d");
+					ctx.drawImage(original, 0, 0, w, h);
+					ctx.fillStyle = "#d00000";
+					ctx.font = `bold ${Math.max(40, Math.floor(h * 0.2))}px Arial`;
+					ctx.textBaseline = "top";
+					ctx.fillText("*", 12, 12);
+
+					const dataUrl = canvas.toDataURL("image/png");
+					sourceImg.src = dataUrl;
+					sourceLink.href = dataUrl;
+				};
+				original.src = originalSrc;
+			}));
+		})();
+		</script>
+		{% endif %}
+	</div>
+
+	{% if result.element_type != "image" %}
+	<p>
+		{% if result.valid %}
+		<span class="validation-pass">&#10003; Valid</span>
+		{% else %}
+		<span class="validation-fail">&#10007; Invalid</span>
+		{% endif %}
+	</p>
+
+	<p><button type="button" id="select-all-btn" class="btn">Select all</button></p>
+	<textarea class="xml-output" id="xml-output" readonly onclick="this.select();">{{ result.xml }}</textarea>
+	<script>
+	document.getElementById("select-all-btn").addEventListener("click", () => {
+		const xmlOutput = document.getElementById("xml-output");
+		xmlOutput.focus();
+		xmlOutput.select();
+	});
+	</script>
+	{% endif %}
+	{% endif %}
+
+	<div class="actions">
+		<form method="post" action="{{ url_for('extract.extract_another') }}">
+			<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+			<button type="submit" class="btn">Extract another</button>
+		</form>
+		<form method="post" action="{{ url_for('extract.new_upload') }}">
+			<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+			<button type="submit" class="link-btn">Upload a different PDF</button>
+		</form>
+	</div>
+</div>
+{% endblock %}

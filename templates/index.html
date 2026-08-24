@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-container">
+	<h1 class="tools-heading">PDF to XML Tools</h1>
+	<form method="post">
+		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+		<div class="card-grid">
+			<a href="{{ url_for('pages.process') }}" class="card">
+				<img class="card-icon" src="{{ url_for('static', filename='images/process.png') }}" alt="">
+				<span class="card-title">Process</span>
+				<hr class="card-divider">
+				<span class="card-desc">Convert PDF to Paligo</span>
+			</a>
+			{% for card in cards %}
+			<button type="submit" name="element_type" value="{{ card.value }}" class="card">
+				<img class="card-icon" src="{{ url_for('static', filename='images/' + card.icon_image) }}" alt="">
+				<span class="card-title">{{ card.label }}</span>
+				<hr class="card-divider">
+				<span class="card-desc">{{ card.description }}</span>
+			</button>
+			{% endfor %}
+
+			<a href="{{ url_for('imagecrop.image_crop') }}" class="card">
+				<img class="card-icon" src="{{ url_for('static', filename='images/crop.png') }}" alt="">
+				<span class="card-title">Crop</span>
+				<hr class="card-divider">
+				<span class="card-desc">Crop an image.</span>
+			</a>
+			<a href="{{ url_for('static', filename='style_guide.pdf') }}" class="card" target="_blank" rel="noopener noreferrer">
+				<img class="card-icon" src="{{ url_for('static', filename='images/style_guide.png') }}" alt="">
+				<span class="card-title">Style guide</span>
+				<hr class="card-divider">
+				<span class="card-desc">Open the style guide.</span>
+			</a>
+			<a href="{{ url_for('pages.troubleshooting') }}" class="card">
+				<img class="card-icon" src="{{ url_for('static', filename='images/troubleshooting.png') }}" alt="">
+				<span class="card-title">Troubleshooting</span>
+				<hr class="card-divider">
+				<span class="card-desc">Information on solving problems.</span>
+			</a>
+		</div>
+	</form>
+</div>
+{% endblock %}

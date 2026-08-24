@@ -1,0 +1,4 @@
+# Dev-only tooling, not part of the deployed app -- install into the
+# same .venv as requirements.txt.
+
+playwright==1.62.0   # headless-browser screenshots/interaction tests for the wizard UI

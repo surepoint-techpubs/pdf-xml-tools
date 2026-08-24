@@ -1,0 +1,36 @@
+# systemd unit for PDF-XML, gunicorn-served, loopback-only -- nginx
+# (deploy/pdfxml.nginx.conf) is the thing that actually faces the
+# network and terminates TLS.
+#
+# install:
+#   sudo cp deploy/pdfxml.service /etc/systemd/system/pdfxml.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now pdfxml
+#
+# adjust User/Group, WorkingDirectory, and the venv path below for
+# wherever this actually lives on the host. --workers is deliberately
+# 1: Flask-Limiter's login rate limit is tracked in memory per worker,
+# so more workers would silently loosen it. Fine for a handful of
+# users; revisit (shared storage_uri) if that ever changes.
+[Unit]
+Description=PDF-XML
+After=network.target
+
+[Service]
+Type=simple
+User=dan
+Group=dan
+WorkingDirectory=/home/dan/PDF-XML
+Environment=PDFXML_BEHIND_PROXY=1
+ExecStart=/home/dan/PDF-XML/.venv/bin/gunicorn --workers 1 --bind 127.0.0.1:8089 run:app
+Restart=on-failure
+RestartSec=5
+
+# no privilege to gain, no reason to touch the rest of the filesystem
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/home/dan/PDF-XML
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,597 @@
+body {
+	font-family: sans-serif;
+	margin: 0;
+}
+
+.topbar {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 10px 16px;
+	background-color: #0056b3;
+	color: white;
+}
+
+.topbar a {
+	color: white;
+}
+
+.topbar .brand {
+	font-weight: bold;
+	font-size: 1.2rem;
+	margin-right: auto;
+	color: #ff6f20;
+}
+
+.icon-link {
+	display: inline-flex;
+	opacity: 0.9;
+}
+
+.icon-link:hover {
+	opacity: 1;
+}
+
+.icon-link img {
+	width: 28px;
+	height: 28px;
+	display: block;
+}
+
+.topbar form {
+	margin: 0;
+	display: flex;
+}
+
+/* the logout icon is a <button> now (POST, not a plain GET <a>) --
+   strip the button chrome the bare `button` rule below would otherwise
+   add, so it still looks like an icon, not a blue pill */
+.topbar button.icon-link {
+	background: none;
+	border: 0;
+	padding: 0;
+	font-size: inherit;
+}
+
+.topbar button.icon-link:hover {
+	background: none;
+}
+
+.page-container {
+	max-width: 900px;
+	margin: 24px auto;
+	padding: 0 16px;
+}
+
+.breadcrumbs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 16px;
+	font-size: 0.85rem;
+}
+
+.breadcrumbs a {
+	color: #0056b3;
+	text-decoration: none;
+	font-weight: 600;
+}
+
+.breadcrumbs a:hover {
+	text-decoration: underline;
+}
+
+.breadcrumbs-separator {
+	color: #8a949e;
+}
+
+.breadcrumbs-current {
+	color: #5d6872;
+}
+
+.field {
+	margin-bottom: 12px;
+}
+
+/* replaces a bare <p> as a button-row container wherever one of the
+   buttons in it is a <form> -- <form> isn't valid inside <p> */
+.actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 1em 0;
+}
+
+.actions form {
+	margin: 0;
+}
+
+/* a <button> standing in for what used to be a plain, unstyled <a> --
+   GET routes with side effects (logout, clear PDF, etc.) moved to POST */
+.link-btn {
+	background: none;
+	border: 0;
+	padding: 0;
+	margin: 0;
+	font: inherit;
+	color: #0056b3;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.link-btn:hover {
+	color: #003d80;
+}
+
+label {
+	display: block;
+	margin-bottom: 4px;
+	font-weight: bold;
+}
+
+input[type="text"], input[type="password"], input[type="number"], input[type="file"] {
+	font-size: 1rem;
+	padding: 6px;
+	width: 100%;
+	max-width: 400px;
+	box-sizing: border-box;
+}
+
+button, .btn {
+	font-size: 1rem;
+	padding: 8px 16px;
+	background-color: #0056b3;
+	color: white;
+	border: 0;
+	border-radius: 4px;
+	cursor: pointer;
+	text-decoration: none;
+	display: inline-block;
+}
+
+/* excludes .card -- a <button class="card"> (the extraction-type */
+/* cards) shouldn't pick up the generic dark-on-hover treatment; */
+/* .card:hover below already gives it the same plain hover the */
+/* <a class="card"> tool cards get, with no background-color change */
+button:not(.card):hover, .btn:hover {
+	background-color: #003d80;
+}
+
+button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.error-text {
+	color: #b00020;
+}
+
+/* card grid, colors, and hover treatment borrowed from */
+/* old_pdf_xml/templates/tools.html */
+.tools-heading {
+	color: #0056b3;
+}
+
+.card-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 20px;
+}
+
+.card {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 6px;
+	padding: 24px;
+	background: white;
+	color: #333;
+	border: 1px solid #0056b3;
+	border-radius: 12px;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+	cursor: pointer;
+	text-align: left;
+	text-decoration: none;
+	font: inherit;
+	transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+	border-color: #3498db;
+}
+
+.pdf-thumbnail {
+	display: block;
+	max-width: 160px;
+	border: 1px solid #ccc;
+	margin: 8px 0;
+}
+
+/* the <a> wrapping this image must be display:block -- as an inline */
+/* element it gives the percentage max-width below nothing definite */
+/* to resolve against, so the image renders at native size instead */
+/* and breaks out of its container */
+.image-link {
+	display: block;
+}
+
+/* display-only cap -- the <img> src still points at the full- */
+/* resolution PNG, so "Save Image As" always saves the original, */
+/* not this scaled-down rendering */
+.extracted-image {
+	display: block;
+	max-width: 70%;
+	height: auto;
+	border: 1px solid #ccc;
+}
+
+.watermark-symbol {
+	color: #d00000;
+}
+
+.card-icon {
+	width: 2.5rem;
+	height: 2.5rem;
+	object-fit: contain;
+}
+
+.card-title {
+	font-weight: bold;
+	font-size: 1.2rem;
+	color: #0056b3;
+}
+
+.card-divider {
+	width: 100%;
+	height: 2px;
+	border: none;
+	background-color: #ff6f20;
+	margin: 4px 0;
+}
+
+.card-desc {
+	font-size: 0.9rem;
+	color: #333;
+}
+
+#page-image-wrap {
+	position: relative;
+	display: inline-block;
+	border: 1px solid #ccc;
+}
+
+#page-image {
+	display: block;
+	max-width: 100%;
+	-webkit-user-drag: none;
+	user-select: none;
+}
+
+/* IMAGE CROP TOOL */
+.upload-box {
+	border: 2px dashed #ccc;
+	padding: 30px;
+	text-align: center;
+	border-radius: 8px;
+	background: #fafafa;
+}
+
+.upload-box label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: bold;
+}
+
+.canvas-wrap {
+	overflow: auto;
+	margin-top: 20px;
+	padding: 10px;
+	border: 1px solid #ddd;
+	background: #7f8c8d;
+	border-radius: 6px;
+	text-align: center;
+}
+
+.canvas-wrap canvas {
+	display: block;
+	margin: 0 auto;
+	max-width: 100%;
+	height: auto;
+	cursor: crosshair;
+}
+
+.controls {
+	display: flex;
+	gap: 12px;
+	justify-content: center;
+	margin: 20px 0;
+}
+
+.btn-reset {
+	font-size: 1rem;
+	padding: 8px 16px;
+	background-color: #e74c3c;
+	color: white;
+	border: 0;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.btn-reset:hover {
+	background-color: #c0392b;
+}
+
+#select-box {
+	position: absolute;
+	border: 2px dashed #2f6fed;
+	background: rgba(47, 111, 237, 0.15);
+	display: none;
+}
+
+.preview-box {
+	border: 1px solid #ccc;
+	padding: 12px;
+	margin-bottom: 12px;
+	background: #fafafa;
+}
+
+.preview-box table {
+	border-collapse: collapse;
+}
+
+.preview-box th,
+.preview-box td {
+	border: 1px solid #ccc;
+	padding: 4px 8px;
+	text-align: left;
+}
+
+.preview-box th {
+	background: #eee;
+}
+
+/* ADMIN SETTINGS */
+.admin-users {
+	border-collapse: collapse;
+	width: 100%;
+}
+
+.admin-users th,
+.admin-users td {
+	border: 1px solid #ccc;
+	padding: 8px 12px;
+	text-align: left;
+}
+
+.admin-users th {
+	background: #eee;
+}
+
+.admin-users form {
+	margin: 0;
+}
+
+.admin-password-form {
+	display: flex;
+	gap: 6px;
+	align-items: flex-start;
+	margin: 0;
+}
+
+.admin-password-input {
+	font: inherit;
+	padding: 4px 6px;
+	width: 160px;
+	resize: vertical;
+}
+
+.admin-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 10px;
+	background: #0056b3;
+	color: white;
+	font-size: 0.75rem;
+	font-weight: bold;
+}
+
+textarea.xml-output {
+	width: 100%;
+	height: 200px;
+	font-family: monospace;
+	box-sizing: border-box;
+}
+
+.validation-pass {
+	color: #1a7f37;
+	font-weight: bold;
+}
+
+.validation-fail {
+	color: #b00020;
+	font-weight: bold;
+}
+
+/* PROCESS/TROUBLESHOOTING -- JSON-backed tabs, viewer + editor, */
+/* ported from old_pdf_xml's process.html/process_edit.html */
+.tab-list {
+	display: flex;
+	gap: 4px;
+	overflow-x: auto;
+	margin-bottom: 0;
+	border-bottom: 1px solid #b8c2cc;
+}
+
+.tab-button {
+	padding: 10px 16px;
+	border: 1px solid #b8c2cc;
+	border-bottom: none;
+	border-radius: 6px 6px 0 0;
+	background: #e9eef3;
+	color: #43515d;
+	cursor: pointer;
+	white-space: nowrap;
+	font: inherit;
+}
+
+.tab-button.active {
+	background: white;
+	color: #0056b3;
+	font-weight: bold;
+}
+
+.tab-panel {
+	display: none;
+	padding: 16px;
+	border: 1px solid #b8c2cc;
+	border-top: none;
+	border-radius: 0 0 6px 6px;
+	line-height: 1.5;
+}
+
+.tab-panel.active {
+	display: block;
+}
+
+.editor-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 10px;
+}
+
+.editor {
+	min-height: 400px;
+	padding: 16px;
+	border: 1px solid #b8c2cc;
+	border-radius: 6px;
+	line-height: 1.5;
+	outline: none;
+	background: white;
+}
+
+.editor:focus {
+	border-color: #0056b3;
+	box-shadow: 0 0 0 2px #dceafb;
+}
+
+.editor:empty::before {
+	color: #7b8791;
+	content: "Write content here...";
+}
+
+.tab-editor-panel {
+	display: none;
+}
+
+.tab-editor-panel.active {
+	display: block;
+}
+
+.tab-label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: bold;
+}
+
+.tab-label input {
+	display: block;
+	width: 100%;
+	max-width: 360px;
+	margin-top: 5px;
+	padding: 8px;
+	box-sizing: border-box;
+	border: 1px solid #b8c2cc;
+	border-radius: 4px;
+	font: inherit;
+}
+
+.tab-strip-row {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+}
+
+.tab-editor-list {
+	display: flex;
+	gap: 4px;
+	overflow-x: auto;
+	margin: 10px 0 0;
+	border-bottom: 1px solid #b8c2cc;
+	flex: 1;
+	min-width: 0;
+}
+
+.tab-editor-item {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: stretch;
+}
+
+.tab-editor-item .tab-button,
+.add-tab-button,
+.remove-tab-button {
+	border: 1px solid #b8c2cc;
+	background: #e9eef3;
+	color: #43515d;
+	cursor: pointer;
+	font: inherit;
+}
+
+.tab-editor-item .tab-button {
+	background: #0056b3;
+	border-radius: 6px 0 0 0;
+	color: white;
+	padding: 10px 16px;
+	white-space: nowrap;
+}
+
+.tab-editor-item .tab-button:not(.active) {
+	background: #e9eef3;
+	color: #43515d;
+}
+
+.remove-tab-button {
+	width: 30px;
+	padding: 0;
+	border-left: none;
+	border-radius: 0 6px 0 0;
+	color: #9d2525;
+	font-size: 1.1rem;
+}
+
+.add-tab-button {
+	min-width: 42px;
+	margin-left: 4px;
+	border-radius: 6px 6px 0 0;
+	color: #0056b3;
+	font-size: 1.25rem;
+}
+
+.tab-editor-item .tab-button:hover,
+.remove-tab-button:hover,
+.add-tab-button:hover {
+	background: #eef5fc;
+}
+
+.tab-strip-save {
+	margin: 10px 0 0;
+	white-space: nowrap;
+}
+
+.editor-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-top: 12px;
+}
+
+.save-confirmed {
+	color: #1a7f37;
+	font-weight: bold;
+}
+
+

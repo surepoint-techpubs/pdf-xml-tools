@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-container">
+	{% include "_breadcrumbs.html" %}
+	<h1>Draw a region around the {{ element_label|lower }}</h1>
+	<p class="subtitle">
+		Page {{ page_number }}
+		{% if element_type == "image" %}-- high-resolution preview, for a clean crop{% endif %}
+	</p>
+	{% if error %}<p class="error-text">{{ error }}</p>{% endif %}
+
+	<p class="controls">
+		<button type="submit" form="select-form" class="extract-btn" disabled>Extract</button>
+		<button type="button" class="btn-reset clear-btn">Clear selection</button>
+	</p>
+
+	<div id="page-image-wrap">
+		<img id="page-image" src="{{ url_for('extract.page_image') }}" alt="Page {{ page_number }}" draggable="false">
+		<div id="select-box"></div>
+	</div>
+
+	<form method="post" id="select-form">
+		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+		<input type="hidden" name="x0" id="x0">
+		<input type="hidden" name="y0" id="y0">
+		<input type="hidden" name="x1" id="x1">
+		<input type="hidden" name="y1" id="y1">
+		<p class="controls">
+			<button type="submit" class="extract-btn" disabled>Extract</button>
+			<button type="button" class="btn-reset clear-btn">Clear selection</button>
+		</p>
+	</form>
+</div>
+
+<script>
+(function () {
+	const img = document.getElementById("page-image");
+	const wrap = document.getElementById("page-image-wrap");
+	const box = document.getElementById("select-box");
+	const extractBtns = document.querySelectorAll(".extract-btn"); // one above the image, one below
+	const clearBtns = document.querySelectorAll(".clear-btn"); // one above the image, one below
+	let startX, startY, dragging = false;
+
+	function pointerPos(e) {
+		const rect = img.getBoundingClientRect();
+		return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+	}
+
+	wrap.addEventListener("mousedown", function (e) {
+		e.preventDefault(); // stop the browser's native image-drag from hijacking the gesture
+		const p = pointerPos(e);
+		startX = p.x;
+		startY = p.y;
+		dragging = true;
+		box.style.left = startX + "px";
+		box.style.top = startY + "px";
+		box.style.width = "0px";
+		box.style.height = "0px";
+		box.style.display = "block";
+		extractBtns.forEach((btn) => btn.disabled = true);
+	});
+
+	wrap.addEventListener("mousemove", function (e) {
+		if (!dragging) return;
+		const p = pointerPos(e);
+		const x = Math.min(startX, p.x);
+		const y = Math.min(startY, p.y);
+		box.style.left = x + "px";
+		box.style.top = y + "px";
+		box.style.width = Math.abs(p.x - startX) + "px";
+		box.style.height = Math.abs(p.y - startY) + "px";
+	});
+
+	wrap.addEventListener("mouseup", function (e) {
+		if (!dragging) return;
+		dragging = false;
+		const p = pointerPos(e);
+
+		// the displayed image may be CSS-scaled smaller than its actual
+		// rendered pixel size -- convert back to natural pixel space,
+		// which is what the server's PREVIEW_ZOOM conversion expects
+		const scaleX = img.naturalWidth / img.clientWidth;
+		const scaleY = img.naturalHeight / img.clientHeight;
+
+		const x0 = Math.min(startX, p.x) * scaleX;
+		const y0 = Math.min(startY, p.y) * scaleY;
+		const x1 = Math.max(startX, p.x) * scaleX;
+		const y1 = Math.max(startY, p.y) * scaleY;
+
+		document.getElementById("x0").value = x0;
+		document.getElementById("y0").value = y0;
+		document.getElementById("x1").value = x1;
+		document.getElementById("y1").value = y1;
+
+		extractBtns.forEach((btn) => btn.disabled = (x1 - x0 < 2 || y1 - y0 < 2));
+	});
+
+	clearBtns.forEach((btn) => btn.addEventListener("click", () => {
+		box.style.display = "none";
+		box.style.width = "0px";
+		box.style.height = "0px";
+		["x0", "y0", "x1", "y1"].forEach((id) => document.getElementById(id).value = "");
+		extractBtns.forEach((b) => b.disabled = true);
+	}));
+})();
+</script>
+{% endblock %}

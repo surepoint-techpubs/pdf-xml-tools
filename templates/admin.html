@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-container">
+	<h1 class="tools-heading">Admin settings</h1>
+	{% if error %}<p class="error-text">{{ error }}</p>{% endif %}
+
+	<p><a href="{{ url_for('admin.new_user') }}" class="btn">Add user</a></p>
+
+	<table class="admin-users">
+		<thead>
+			<tr>
+				<th>Username</th>
+				<th>Password</th>
+				<th>Logged in</th>
+				<th></th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for user in users %}
+			<tr>
+				<td>{{ user.username }}{% if user.is_admin %} <span class="admin-badge">admin</span>{% endif %}</td>
+				<td>
+					<form method="post" action="{{ url_for('admin.set_password', user_id=user.id) }}" class="admin-password-form">
+						<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+						<textarea name="password" class="admin-password-input" rows="1" minlength="12" placeholder="New password" required></textarea>
+						<button type="submit">Save</button>
+					</form>
+				</td>
+				<td>{{ "Yes" if user.is_logged_in else "No" }}</td>
+				<td>
+					<form method="post" action="{{ url_for('admin.force_logout', user_id=user.id) }}">
+						<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+						<button type="submit" {% if not user.is_logged_in %}disabled{% endif %}>Log out</button>
+					</form>
+				</td>
+				<td>
+					<form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}"
+						onsubmit="return confirm('Delete user &quot;{{ user.username }}&quot;? This can\'t be undone.');">
+						<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+						<button type="submit" class="btn-reset" {% if user.id == session.get('user_id') %}disabled title="You can't delete your own account"{% endif %}>Delete</button>
+					</form>
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% endblock %}

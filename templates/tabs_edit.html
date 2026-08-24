@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-container">
+	<h1 class="tools-heading">Edit {{ title }}</h1>
+	<p class="subtitle"><a href="{{ url_for('pages.' + page_key) }}">&larr; View {{ title }}</a></p>
+
+	<form method="post" id="tabs-form">
+		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+		<div class="editor-toolbar" role="toolbar" aria-label="Formatting tools">
+			<button type="button" data-command="bold"><strong>Bold</strong></button>
+			<button type="button" data-command="italic"><em>Italic</em></button>
+			<button type="button" data-command="insertUnorderedList">Bulleted list</button>
+			<button type="button" data-command="insertOrderedList">Numbered list</button>
+			<button type="button" data-command="formatBlock" data-value="h2">Heading 2</button>
+			<button type="button" data-command="formatBlock" data-value="h3">Heading 3</button>
+			<button type="button" data-command="insertHorizontalRule">Horizontal rule</button>
+			<button type="button" id="code-button"><code>Code</code></button>
+		</div>
+
+		<div class="tab-strip-row">
+			<div class="tab-editor-list" id="tab-buttons" role="tablist" aria-label="{{ title }} tabs"></div>
+			<button class="btn tab-strip-save" type="submit">Save {{ title|lower }}</button>
+		</div>
+
+		<div id="tab-editors">
+			{% for tab in tabs %}
+			<section class="tab-editor-panel{% if loop.first %} active{% endif %}" data-tab-index="{{ loop.index0 }}">
+				<label class="tab-label">Tab label
+					<input class="tab-label-input" type="text" value="{{ tab.label }}" maxlength="80">
+				</label>
+				<div class="editor" contenteditable="true" role="textbox" aria-label="Edit {{ tab.label }}">{{ tab.content|safe }}</div>
+			</section>
+			{% endfor %}
+		</div>
+		<input type="hidden" name="tabs" id="tabs-input">
+
+		<div class="editor-actions">
+			<button class="btn" type="submit">Save {{ title|lower }}</button>
+			<a href="{{ url_for('pages.' + page_key) }}">Cancel</a>
+			{% if saved %}<span class="save-confirmed" role="status">Saved.</span>{% endif %}
+		</div>
+	</form>
+</div>
+
+<script>
+(function () {
+	const tabEditors = document.getElementById("tab-editors");
+	const tabButtons = document.getElementById("tab-buttons");
+
+	function panels() {
+		return Array.from(tabEditors.querySelectorAll(".tab-editor-panel"));
+	}
+
+	function activateTab(index) {
+		panels().forEach((panel, panelIndex) => panel.classList.toggle("active", panelIndex === index));
+		tabButtons.querySelectorAll(".tab-button").forEach((button, buttonIndex) => button.classList.toggle("active", buttonIndex === index));
+	}
+
+	function renderTabButtons() {
+		tabButtons.innerHTML = "";
+		panels().forEach((panel, index) => {
+			const label = panel.querySelector(".tab-label-input").value.trim() || "Untitled";
+			const item = document.createElement("div");
+			item.className = "tab-editor-item";
+
+			const button = document.createElement("button");
+			button.className = "tab-button";
+			button.type = "button";
+			button.textContent = label;
+			button.addEventListener("click", () => activateTab(index));
+
+			const removeButton = document.createElement("button");
+			removeButton.className = "remove-tab-button";
+			removeButton.type = "button";
+			removeButton.textContent = "−";
+			removeButton.setAttribute("aria-label", `Delete ${label} tab`);
+			removeButton.title = `Delete ${label} tab`;
+			removeButton.addEventListener("click", () => {
+				if (panels().length > 1) {
+					const wasActive = panel.classList.contains("active");
+					const removedIndex = panels().indexOf(panel);
+					panel.remove();
+					if (wasActive) {
+						const nextIndex = Math.min(removedIndex, panels().length - 1);
+						panels()[nextIndex].classList.add("active");
+					}
+					renderTabButtons();
+				}
+			});
+
+			item.append(button, removeButton);
+			tabButtons.appendChild(item);
+		});
+
+		const addButton = document.createElement("button");
+		addButton.className = "add-tab-button";
+		addButton.type = "button";
+		addButton.textContent = "+";
+		addButton.setAttribute("aria-label", "Add tab");
+		addButton.title = "Add tab";
+		addButton.addEventListener("click", addTab);
+		tabButtons.appendChild(addButton);
+
+		const activeIndex = panels().findIndex((panel) => panel.classList.contains("active"));
+		activateTab(activeIndex >= 0 ? activeIndex : 0);
+	}
+
+	document.querySelectorAll(".tab-label-input").forEach((input) => {
+		input.addEventListener("input", renderTabButtons);
+	});
+
+	document.querySelectorAll("[data-command]").forEach((button) => {
+		button.addEventListener("click", () => {
+			const editor = document.querySelector(".tab-editor-panel.active .editor");
+			document.execCommand(button.dataset.command, false, button.dataset.value || null);
+			editor.focus();
+		});
+	});
+
+	document.getElementById("code-button").addEventListener("click", () => {
+		const editor = document.querySelector(".tab-editor-panel.active .editor");
+		const selection = window.getSelection();
+		if (!selection.rangeCount) {
+			editor.focus();
+			return;
+		}
+
+		const range = selection.getRangeAt(0);
+		if (!editor.contains(range.commonAncestorContainer)) {
+			editor.focus();
+			return;
+		}
+
+		const code = document.createElement("code");
+		if (range.collapsed) {
+			code.innerHTML = "&nbsp;";
+			range.insertNode(code);
+			range.setStart(code, 0);
+			range.collapse(true);
+		} else {
+			code.appendChild(range.extractContents());
+			range.insertNode(code);
+			range.selectNodeContents(code);
+			range.collapse(false);
+		}
+		selection.removeAllRanges();
+		selection.addRange(range);
+		editor.focus();
+	});
+
+	function addTab() {
+		const panel = document.createElement("section");
+		panel.className = "tab-editor-panel";
+		panel.innerHTML = '<label class="tab-label">Tab label<input class="tab-label-input" type="text" value="New tab" maxlength="80"></label><div class="editor" contenteditable="true" role="textbox" aria-label="Edit new tab"></div>';
+		tabEditors.appendChild(panel);
+		panel.querySelector(".tab-label-input").addEventListener("input", renderTabButtons);
+		panels().forEach((existingPanel) => existingPanel.classList.remove("active"));
+		panel.classList.add("active");
+		renderTabButtons();
+		panel.querySelector(".editor").focus();
+	}
+
+	document.getElementById("tabs-form").addEventListener("submit", () => {
+		document.getElementById("tabs-input").value = JSON.stringify(panels().map((panel) => ({
+			label: panel.querySelector(".tab-label-input").value,
+			content: panel.querySelector(".editor").innerHTML,
+		})));
+	});
+
+	renderTabButtons();
+})();
+</script>
+{% endblock %}
