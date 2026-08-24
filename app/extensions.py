@@ -9,6 +9,7 @@ import sqlite3
 import time
 from contextlib import contextmanager
 from functools import wraps
+from threading import BoundedSemaphore
 
 from flask import session, redirect, url_for, request, abort
 
@@ -21,6 +22,7 @@ UPLOAD_MAX_AGE_SECONDS = 24 * 60 * 60  # sweep anything older than this
 
 FAILED_ATTEMPT_LIMIT = 5
 LOCKOUT_MINUTES = 15
+PDF_PROCESSING_SLOTS = BoundedSemaphore(value=3)
 
 ### secret key -- generated once, persisted to disk, same pattern as
 ### the sibling COBWEBS/IMPS apps
@@ -88,6 +90,14 @@ def admin_required(f):
         if not session.get("is_admin"):
             abort(403)
         return f(*args, **kwargs)
+    return decorated_function
+
+
+def pdf_processing_limit(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        with PDF_PROCESSING_SLOTS:
+            return f(*args, **kwargs)
     return decorated_function
 
 

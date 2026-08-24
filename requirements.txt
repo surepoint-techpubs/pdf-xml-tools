@@ -10,13 +10,13 @@ bcrypt==5.0.0           # password hashing
 # PDF parsing/rendering -- the only PDF-handling library in this app,
 # deliberately: no Ghostscript, no ImageMagick, no poppler. Self-contained,
 # no external binaries.
-PyMuPDF==1.26.5
+PyMuPDF==1.26.7
 
 # XML fragment construction -- safe escaping/serialization, not string formatting
 lxml==6.1.2
 
 # HTML sanitization for admin-authored process/troubleshooting content
-bleach==6.2.0
+bleach==6.4.0
 
 # Database is sqlite3 (Python stdlib) -- no package needed.
 

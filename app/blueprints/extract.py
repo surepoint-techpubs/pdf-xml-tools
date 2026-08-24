@@ -4,7 +4,7 @@
 import fitz
 from flask import Blueprint, render_template, request, redirect, url_for, session, Response, abort
 
-from app.extensions import login_required, save_upload, upload_path, delete_upload, save_result, load_result
+from app.extensions import login_required, pdf_processing_limit, save_upload, upload_path, delete_upload, save_result, load_result
 from app import docbook
 
 bp = Blueprint("extract", __name__)
@@ -145,6 +145,7 @@ def clear_pdf():
 
 @bp.route("/upload", methods=["POST"])
 @login_required
+@pdf_processing_limit
 def upload():
     if "element_type" not in session:
         return redirect(url_for("extract.index"))
@@ -189,6 +190,7 @@ def upload():
 
 @bp.route("/extract/page", methods=["GET", "POST"])
 @login_required
+@pdf_processing_limit
 def choose_page():
     doc = _open_current_pdf()
     if doc is None or "element_type" not in session:
@@ -219,6 +221,7 @@ def choose_page():
 
 @bp.route("/extract/select", methods=["GET", "POST"])
 @login_required
+@pdf_processing_limit
 def select_region():
     doc = _open_current_pdf()
     if doc is None or "element_type" not in session or "page_number" not in session:
@@ -327,6 +330,7 @@ def result():
 
 @bp.route("/extract/thumbnail")
 @login_required
+@pdf_processing_limit
 def thumbnail():
     doc = _open_current_pdf()
     if doc is None:
@@ -340,6 +344,7 @@ def thumbnail():
 
 @bp.route("/extract/page-image")
 @login_required
+@pdf_processing_limit
 def page_image():
     doc = _open_current_pdf()
     if doc is None or "page_number" not in session:
@@ -354,6 +359,7 @@ def page_image():
 
 @bp.route("/extract/image")
 @login_required
+@pdf_processing_limit
 def extracted_image():
     result_data = load_result(session.get("pdf_token"))
     if result_data is None or result_data["element_type"] != "image":
