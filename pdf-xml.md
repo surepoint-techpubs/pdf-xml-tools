@@ -8,9 +8,7 @@ handling.
 ## Requirements
 
 - Python 3.12
-- `xmllint` (validates generated XML against `schema/docbook.rng`) --
-  a system package, not a Python one:
-  `sudo apt install libxml2-utils`
+- XML validation is handled by `lxml` from `requirements.txt`.
 
 Everything else is in `requirements.txt` (and `requirements-dev.txt`
 for Playwright-based UI tests, optional).

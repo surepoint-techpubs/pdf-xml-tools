@@ -13,8 +13,6 @@
 ########################################################################
 import os
 import re
-import subprocess
-import tempfile
 
 import fitz
 from lxml import etree
@@ -219,26 +217,15 @@ def extract_image(page, rect, zoom):
 
 ########################################################################
 ### VALIDATION -- wrap the fragment in the minimal valid DocBook 5
-### container for its type, validate with xmllint --relaxng against
-### the vendored schema, discard the wrapper either way. Returns
-### (is_valid, message).
+### container for its type and validate against the vendored schema.
+### Returns (is_valid, message).
 _WRAP = '<article xmlns="{ns}" version="5.2"><title>x</title>{fragment}</article>'
 
 
 def validate_fragment(xml_fragment):
     wrapped = _WRAP.format(ns=DOCBOOK_NS, fragment=xml_fragment)
-    with tempfile.NamedTemporaryFile("w", suffix=".xml", delete=False) as f:
-        f.write(wrapped)
-        temp_path = f.name
-    try:
-        result = subprocess.run(
-            ["xmllint", "--relaxng", SCHEMA_PATH, "--noout", temp_path],
-            capture_output=True, text=True, timeout=10,
-        )
-        if result.returncode == 0:
-            return True, "Valid DocBook 5."
-        return False, result.stderr.strip()
-    except subprocess.TimeoutExpired:
-        return False, "Validation timed out."
-    finally:
-        os.remove(temp_path)
+    schema = etree.RelaxNG(etree.parse(SCHEMA_PATH))
+    document = etree.fromstring(wrapped.encode("utf-8"))
+    if schema.validate(document):
+        return True, "Valid DocBook 5."
+    return False, str(schema.error_log.last_error)

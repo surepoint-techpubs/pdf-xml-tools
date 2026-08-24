@@ -26,11 +26,11 @@ LOCKOUT_MINUTES = 15
 ### the sibling COBWEBS/IMPS apps
 SECRET_KEY_PATH = os.path.join(PROJECT_DIR, ".secret_key")
 if os.path.exists(SECRET_KEY_PATH):
-    with open(SECRET_KEY_PATH) as f:
+    with open(SECRET_KEY_PATH, encoding="utf-8") as f:
         FLASK_SECRET_KEY = f.read().strip()
 else:
     FLASK_SECRET_KEY = secrets.token_hex(32)
-    with open(SECRET_KEY_PATH, "w") as f:
+    with open(SECRET_KEY_PATH, "w", encoding="utf-8") as f:
         f.write(FLASK_SECRET_KEY)
     os.chmod(SECRET_KEY_PATH, 0o600)
 
@@ -140,7 +140,7 @@ def save_result(token, result_dict):
     path = upload_path(token)
     if path is None:
         return
-    with open(f"{path}.result.json", "w") as f:
+    with open(f"{path}.result.json", "w", encoding="utf-8") as f:
         json.dump(result_dict, f)
 
 
@@ -151,7 +151,7 @@ def load_result(token):
     result_path = f"{path}.result.json"
     if not os.path.isfile(result_path):
         return None
-    with open(result_path) as f:
+    with open(result_path, encoding="utf-8") as f:
         return json.load(f)
 
 

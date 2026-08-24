@@ -131,6 +131,7 @@ def choose_pdf():
         element_label=TYPE_LABELS.get(session.get("element_type"), ""),
         pdf_filename=session.get("pdf_filename"),
         page_count=session.get("page_count"),
+        replace_pdf=request.args.get("replace") == "1",
         error=None,
     )
 

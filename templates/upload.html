@@ -9,13 +9,20 @@
 	{% if pdf_filename %}
 	<img src="{{ url_for('extract.thumbnail') }}" alt="First page of {{ pdf_filename }}" class="pdf-thumbnail">
 	<p class="subtitle">{{ pdf_filename }} ({{ page_count }} page{{ "s" if page_count != 1 }})</p>
+	{% if replace_pdf %}
+	<form method="post" action="{{ url_for('extract.upload') }}" enctype="multipart/form-data">
+		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+		<div class="field">
+			<input type="file" name="pdf" accept="application/pdf" required>
+		</div>
+		<button type="submit">Upload new PDF</button>
+	</form>
+	{% else %}
 	<div class="actions">
 		<a href="{{ url_for('extract.choose_page') }}" class="btn">Continue with this PDF</a>
-		<form method="post" action="{{ url_for('extract.clear_pdf') }}">
-			<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-			<button type="submit" class="link-btn">Upload a different PDF</button>
-		</form>
+		<a href="{{ url_for('extract.choose_pdf', replace=1) }}" class="btn">Upload new</a>
 	</div>
+	{% endif %}
 	{% else %}
 	<form method="post" action="{{ url_for('extract.upload') }}" enctype="multipart/form-data">
 		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

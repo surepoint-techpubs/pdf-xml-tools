@@ -34,13 +34,13 @@ def _read_tabs(page_key):
     page = PAGES[page_key]
     if not os.path.exists(page["path"]):
         return page["default_tabs"]
-    with open(page["path"]) as f:
+    with open(page["path"], encoding="utf-8") as f:
         tabs = json.load(f)
     return tabs or page["default_tabs"]
 
 
 def _save_tabs(page_key, tabs):
-    with open(PAGES[page_key]["path"], "w") as f:
+    with open(PAGES[page_key]["path"], "w", encoding="utf-8") as f:
         json.dump(tabs, f, ensure_ascii=False, indent=2)
 
 
