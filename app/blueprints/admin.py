@@ -76,7 +76,13 @@ def set_password(user_id):
         if target is None:
             abort(404)
         password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-        conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id))
+        conn.execute(
+            """UPDATE users
+               SET password_hash = ?, is_logged_in = 0,
+                   failed_attempts = 0, locked_until = NULL
+               WHERE id = ?""",
+            (password_hash, user_id),
+        )
         conn.commit()
     logger.info("password changed via admin page: id=%s", user_id)
     return redirect(url_for("admin.settings"))

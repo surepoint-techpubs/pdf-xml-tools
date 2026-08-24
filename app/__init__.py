@@ -2,9 +2,10 @@
 ### APP FACTORY
 ########################################################################
 import os
+import secrets
 import sqlite3
 
-from flask import Flask, render_template, request, url_for
+from flask import Flask, g, render_template, request, url_for
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -44,7 +45,19 @@ def create_app():
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "same-origin"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; base-uri 'self'; object-src 'none'; "
+            "frame-ancestors 'none'; img-src 'self' data:; "
+            f"script-src 'self' 'nonce-{g.csp_nonce}'; "
+            "style-src 'self' 'unsafe-inline'; form-action 'self'"
+        )
+        if os.environ.get("PDFXML_BEHIND_PROXY"):
+            response.headers["Strict-Transport-Security"] = "max-age=31536000"
         return response
+
+    @app.before_request
+    def _set_csp_nonce():
+        g.csp_nonce = secrets.token_urlsafe(16)
 
     sweep_old_uploads()
 

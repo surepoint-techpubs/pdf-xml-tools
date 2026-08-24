@@ -18,7 +18,7 @@
 	</article>
 	{% endfor %}
 </div>
-<script>
+<script nonce="{{ g.csp_nonce }}">
 document.querySelectorAll(".tab-button").forEach((button) => {
 	button.addEventListener("click", () => {
 		document.querySelectorAll(".tab-button").forEach((b) => {
