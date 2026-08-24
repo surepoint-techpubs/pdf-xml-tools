@@ -10,11 +10,28 @@
 import json
 import os
 
+import bleach
 from flask import Blueprint, render_template, request
 
 from app.extensions import login_required, admin_required, PROJECT_DIR
 
 bp = Blueprint("pages", __name__)
+
+_ALLOWED_HTML_TAGS = {
+    "p", "br", "strong", "em", "ul", "ol", "li", "h2", "h3", "hr", "code",
+}
+
+
+def _sanitize_tabs(tabs):
+    for tab in tabs:
+        tab["content"] = bleach.clean(
+            tab["content"],
+            tags=_ALLOWED_HTML_TAGS,
+            attributes={},
+            strip=True,
+            strip_comments=True,
+        )
+    return tabs
 
 PAGES = {
     "process": {
@@ -36,10 +53,11 @@ def _read_tabs(page_key):
         return page["default_tabs"]
     with open(page["path"], encoding="utf-8") as f:
         tabs = json.load(f)
-    return tabs or page["default_tabs"]
+    return _sanitize_tabs(tabs) if tabs else page["default_tabs"]
 
 
 def _save_tabs(page_key, tabs):
+    _sanitize_tabs(tabs)
     with open(PAGES[page_key]["path"], "w", encoding="utf-8") as f:
         json.dump(tabs, f, ensure_ascii=False, indent=2)
 

@@ -13,7 +13,10 @@ bcrypt==5.0.0           # password hashing
 PyMuPDF==1.26.5
 
 # XML fragment construction -- safe escaping/serialization, not string formatting
-lxml==5.4.0
+lxml==6.1.2
+
+# HTML sanitization for admin-authored process/troubleshooting content
+bleach==6.2.0
 
 # Database is sqlite3 (Python stdlib) -- no package needed.
 
