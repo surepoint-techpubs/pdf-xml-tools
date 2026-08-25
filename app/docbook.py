@@ -147,21 +147,19 @@ def extract_table(page, rect):
         rows = [[whole_text]] if whole_text else [[""]]
         has_header = False
 
-    cols = max(len(row) for row in rows)
-    root = etree.Element("informaltable")
-    tgroup = etree.SubElement(root, "tgroup", cols=str(cols))
+    root = etree.Element("informaltable", frame="box", rules="all")
 
     header_row = None
     body_rows = rows
     if has_header:
         header_row = rows[0]
         body_rows = rows[1:]
-        thead = etree.SubElement(tgroup, "thead")
-        _append_row(thead, header_row)
+        thead = etree.SubElement(root, "thead")
+        _append_row(thead, header_row, "th")
 
-    tbody = etree.SubElement(tgroup, "tbody")
+    tbody = etree.SubElement(root, "tbody")
     for row in body_rows:
-        _append_row(tbody, row)
+        _append_row(tbody, row, "td")
 
     preview = {"header": header_row, "body": body_rows}
     return preview, _serialize(root)
@@ -171,11 +169,12 @@ def _table_row_text(text_dict, row):
     return [" ".join(_filter_lines(text_dict, fitz.Rect(cell))) if cell else "" for cell in row.cells]
 
 
-def _append_row(parent, row):
-    row_elem = etree.SubElement(parent, "row")
+def _append_row(parent, row, cell_tag):
+    row_elem = etree.SubElement(parent, "tr")
     for cell in row:
-        entry = etree.SubElement(row_elem, "entry")
-        entry.text = cell
+        cell_elem = etree.SubElement(row_elem, cell_tag)
+        para = etree.SubElement(cell_elem, "para")
+        para.text = cell
 
 
 ### PyMuPDF's table.header always assumes a header exists -- absent

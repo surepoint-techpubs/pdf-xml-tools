@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-container">
+	{% include "_breadcrumbs.html" %}
 	<h1 class="tools-heading">{{ title }}</h1>
 	{% if session.get("is_admin") %}
 	<p><a href="{{ url_for('pages.' + page_key + '_edit') }}" class="btn">Edit</a></p>

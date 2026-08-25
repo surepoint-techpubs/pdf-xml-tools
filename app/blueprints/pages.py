@@ -11,7 +11,7 @@ import json
 import os
 
 import bleach
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, url_for
 
 from app.extensions import login_required, admin_required, PROJECT_DIR
 
@@ -77,7 +77,14 @@ def _parse_submitted_tabs(page_key):
 
 def _view(page_key):
     page = PAGES[page_key]
-    return render_template("tabs_view.html", page_key=page_key, title=page["title"], tabs=_read_tabs(page_key))
+    breadcrumbs = [("Home", url_for("extract.index")), (page["title"], "")]
+    return render_template(
+        "tabs_view.html",
+        page_key=page_key,
+        title=page["title"],
+        tabs=_read_tabs(page_key),
+        breadcrumbs=breadcrumbs,
+    )
 
 
 def _edit(page_key):

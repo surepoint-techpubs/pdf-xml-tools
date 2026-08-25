@@ -447,6 +447,10 @@ textarea.xml-output {
 	font-weight: bold;
 }
 
+.tab-button:hover {
+	color: white;
+}
+
 .tab-panel {
 	display: none;
 	padding: 16px;
